@@ -1,0 +1,96 @@
+version: '3.8'
+
+services:
+  food-ordering-postgres:
+    image: postgres:16
+    container_name: user_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: user_service_db
+    ports:
+      - "5434:5432"
+    volumes:
+      - food_ordering_pgdata:/var/lib/postgresql/data
+    networks:
+      - dinegrid_net
+
+  menu-postgres:
+    image: postgres:16
+    container_name: menu_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: menu_service_db
+    ports:
+      - "5433:5432"
+    volumes:
+      - menu_pgdata:/var/lib/postgresql/data
+    networks:
+      - dinegrid_net
+
+  mongo:
+    image: mongo:7.0
+    container_name: order_mongo
+    restart: always
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - dinegrid_net
+
+  food-ordering-service:
+    build: ./food-ordering-service
+    container_name: food_ordering_service_app
+    ports:
+      - "8081:8081"
+    depends_on:
+      - food-ordering-postgres
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://user_postgres:5432/user_service_db
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: admin
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+    networks:
+      - dinegrid_net
+
+  menu-service:
+    build: ./menu-service
+    container_name: menu_service_app
+    ports:
+      - "8082:8082"
+    depends_on:
+      - menu-postgres
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://menu_postgres:5432/menu_service_db
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: admin
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+    networks:
+      - dinegrid_net
+
+  order-service:
+    build: ./order-service
+    container_name: order_service_app
+    ports:
+      - "8083:8083"
+    depends_on:
+      - mongo
+      - food-ordering-service
+      - menu-service
+    environment:
+      SPRING_DATA_MONGODB_URI: mongodb://order_mongo:27017/order_db
+    networks:
+      - dinegrid_net
+
+volumes:
+  food_ordering_pgdata:
+  menu_pgdata:
+  mongo_data:
+
+networks:
+  dinegrid_net:
+    driver: bridge
