@@ -29,21 +29,14 @@ This repository contains **Docker-based infrastructure configurations** for the 
 ## 🚀 Getting Started
 
 1️⃣ Clone this infra repo:
-```bash
 git clone https://github.com/neeldolas/dinegrid-infra.git
 cd dinegrid-infra
 2️⃣ Run the full Docker stack:
 
-bash
-Copy
-Edit
 docker-compose up --build -d
 💡 Tip:
 To clean up orphan containers after removing services:
 
-bash
-Copy
-Edit
 docker-compose up -d --remove-orphans
 🌍 Access Local Services
 Service	URL
